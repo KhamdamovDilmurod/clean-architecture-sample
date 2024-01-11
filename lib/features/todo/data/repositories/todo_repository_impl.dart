@@ -1,4 +1,3 @@
-import 'dart:js_interop';
 
 import 'package:dartz/dartz.dart';
 import 'package:udemy_todo_task/core/error/failures.dart';

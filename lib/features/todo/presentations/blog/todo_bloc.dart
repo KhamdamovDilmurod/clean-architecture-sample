@@ -9,6 +9,7 @@ import '../../domain/usecases/get_todos.dart';
 import '../../domain/usecases/insert_todo.dart';
 
 part 'todo_event.dart';
+
 part 'todo_state.dart';
 
 class TodoBloc extends Bloc<TodoEvent, TodoState> {
@@ -18,12 +19,37 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
   TodoBloc({
     required this.fetchAllTodos,
     required this.insertTodo,
-  }) : super(TodoInitial());
+  }) : super(TodoInitial()) {
+    on<FetchAllTodoEvent>((event, emit) async {
+      emit(TodoLoading());
+      try {
+        final todos = await fetchAllTodos.call(NoParams());
+        todos.fold(
+          (failure) => emit(TodoError('Failed to fetch todos.')),
+          (todos) => emit(FetchAllTodoState(todos)),
+        );
+      } catch (e) {
+        emit(TodoError('Failed to fetch todos.'));
+      }
+    });
+    on<InsertTodoEvent>((event, emit) async {
+      emit(TodoLoading());
+      try {
+        final todos = await insertTodo.call(event.todo);
+        todos.fold(
+          (failure) => emit(TodoError('Failed to fetch todos.')),
+          (todo) => emit(TodoInsertState(todo)),
+        );
+      } catch (e) {
+        emit(TodoError('Failed to fetch todos.'));
+      }
+    });
+  }
 
   @override
   Stream<TodoState> mapEventToState(
-      TodoEvent event,
-      ) async* {
+    TodoEvent event,
+  ) async* {
     if (event is FetchAllTodoEvent) {
       yield* _mapFetchAllTodoEventToState();
     } else if (event is InsertTodoEvent) {
@@ -35,8 +61,8 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
     yield TodoLoading();
     final result = await fetchAllTodos.call(NoParams());
     yield result.fold(
-          (failure) => TodoError(failure.toString()),
-          (todos) => FetchAllTodoState(todos),
+      (failure) => TodoError(failure.toString()),
+      (todos) => FetchAllTodoState(todos),
     );
   }
 
@@ -44,8 +70,8 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
     yield TodoLoading();
     final result = await insertTodo(todo);
     yield result.fold(
-          (failure) => TodoError(failure.toString()),
-          (insertedTodo) => TodoInsertState(insertedTodo),
+      (failure) => TodoError(failure.toString()),
+      (insertedTodo) => TodoInsertState(insertedTodo),
     );
   }
 }
