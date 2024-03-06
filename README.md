@@ -1,4 +1,4 @@
-# udemy_todo_task
+# clean architecture sample
 
 A new Flutter project.
 
